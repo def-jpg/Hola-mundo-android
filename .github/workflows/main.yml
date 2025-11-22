@@ -1,0 +1,54 @@
+name: Build APK
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-pip \
+          autoconf \
+          build-essential \
+          git \
+          zip \
+          unzip \
+          openjdk-11-jdk \
+          libssl-dev \
+          libffi-dev \
+          zlib1g-dev
+          
+    - name: Install Buildozer
+      run: |
+        pip3 install buildozer
+        pip3 install cython==0.29.33
+        
+    - name: Initialize Buildozer
+      run: |
+        buildozer init || true
+        ls -la
+        cat buildozer.spec || echo "No buildozer.spec found"
+        
+    - name: Build APK
+      run: |
+        buildozer -v android debug
+      
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: hola-app-apk
+        path: bin/*.apk
+        retention-days: 7
